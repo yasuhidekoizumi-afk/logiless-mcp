@@ -7,24 +7,19 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { LogilessClient } from "./client.js";
 
-// ─── Environment ────────────────────────────────────────────
 const ACCESS_TOKEN = process.env.LOGILESS_ACCESS_TOKEN;
 const MERCHANT_ID = process.env.LOGILESS_MERCHANT_ID;
-
 if (!ACCESS_TOKEN || !MERCHANT_ID) {
   console.error("Missing required env vars: LOGILESS_ACCESS_TOKEN, LOGILESS_MERCHANT_ID");
   process.exit(1);
 }
-
 const client = new LogilessClient(ACCESS_TOKEN, MERCHANT_ID);
 
-// ─── MCP Server ─────────────────────────────────────────────
 const server = new Server(
   { name: "logiless-mcp", version: "0.1.0" },
   { capabilities: { tools: {} } }
 );
 
-// ─── Tool Definitions ───────────────────────────────────────
 const ALL_TOOLS = [
   // Inventory
   {
@@ -54,7 +49,6 @@ const ALL_TOOLS = [
         model_numbers: { type: "array", items: { type: "string" }, description: "Model numbers (max 100)" },
         warehouse_id: { type: "number", description: "Filter by warehouse ID" },
       },
-      required: [],
     },
   },
   {
@@ -85,15 +79,21 @@ const ALL_TOOLS = [
         model_numbers: { type: "array", items: { type: "string" }, description: "Model numbers (max 100)" },
         warehouse_id: { type: "number", description: "Filter by warehouse ID" },
       },
-      required: [],
     },
   },
   {
     name: "logiless_list_daily_inventory",
-    description: "List daily inventory summaries. Historical snapshot of inventory levels per day.",
+    description: "List daily inventory summaries. Historical snapshot of inventory levels per day. Requires date (Y-m-d).",
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        date: { type: "string", description: "Date (Y-m-d format, required)" },
+        warehouse: { type: "number", description: "Filter by warehouse ID" },
+        article_code: { type: "string", description: "Filter by article code" },
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+      },
+      required: ["date"],
     },
   },
 
@@ -231,7 +231,6 @@ const ALL_TOOLS = [
         ids: { type: "array", items: { type: "number" }, description: "Order IDs (max 100)" },
         codes: { type: "array", items: { type: "string" }, description: "Order codes (max 100)" },
       },
-      required: [],
     },
   },
   {
@@ -363,50 +362,106 @@ const ALL_TOOLS = [
   },
   {
     name: "logiless_list_locations",
-    description: "List all warehouse locations.",
-    inputSchema: { type: "object", properties: {} },
+    description: "List locations within a warehouse. Requires warehouse_id.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        warehouse_id: { type: "number", description: "Warehouse ID (required)" },
+      },
+      required: ["warehouse_id"],
+    },
   },
   {
     name: "logiless_list_suppliers",
-    description: "List all suppliers.",
-    inputSchema: { type: "object", properties: {} },
+    description: "List suppliers (仕入先). Supports filtering by code and update date.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+        code: { type: "string", description: "Filter by supplier code" },
+        updated_at_from: { type: "string", description: "Updated from (Y-m-d H:i:s)" },
+        updated_at_to: { type: "string", description: "Updated to (Y-m-d H:i:s)" },
+      },
+    },
   },
   {
     name: "logiless_list_article_maps",
     description: "List article-to-store mappings (connect store article codes to Logiless article codes).",
-    inputSchema: { type: "object", properties: {} },
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+        store: { type: "number", description: "Filter by store ID" },
+        article_code: { type: "string", description: "Filter by article code" },
+      },
+    },
   },
   {
     name: "logiless_list_reorder_points",
-    description: "List reorder points (発注点) configuration.",
-    inputSchema: { type: "object", properties: {} },
+    description: "List reorder points (発注点) configuration. Supports filtering by article, warehouse, and reorder level status.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+        article_code: { type: "string", description: "Filter by article code" },
+        warehouse_id: { type: "number", description: "Filter by warehouse ID" },
+        is_reorder_level: { type: "number", description: "1 = only items below reorder point" },
+      },
+    },
   },
   {
     name: "logiless_list_transaction_logs",
-    description: "List transaction/log entries.",
-    inputSchema: { type: "object", properties: {} },
+    description: "List transaction/log entries. Supports filtering by transaction type, article, warehouse, and date range.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+        transaction_type: { type: "string", description: "Transaction type filter (comma-separated for multiple)" },
+        article_code: { type: "string", description: "Filter by article code" },
+        warehouse_id: { type: "number", description: "Filter by warehouse ID" },
+        created_at_from: { type: "string", description: "Created from (Y-m-d H:i:s)" },
+        created_at_to: { type: "string", description: "Created to (Y-m-d H:i:s)" },
+      },
+    },
   },
   {
     name: "logiless_list_inter_warehouse_transfers",
     description: "List inter-warehouse transfers.",
-    inputSchema: { type: "object", properties: {} },
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+        document_status: { type: "string", description: "Filter by document status" },
+        warehouse: { type: "number", description: "Source warehouse ID" },
+        destination: { type: "number", description: "Destination warehouse ID" },
+      },
+    },
   },
   {
     name: "logiless_list_inbound_deliveries",
-    description: "List inbound deliveries (入荷配送).",
-    inputSchema: { type: "object", properties: {} },
+    description: "List inbound deliveries (入荷配送). Supports filtering by status and warehouse.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Max results (default: 20, max: 100)" },
+        page: { type: "number", description: "Page number (default: 1)" },
+        status: { type: "string", description: "Filter by status" },
+        warehouse: { type: "number", description: "Filter by warehouse ID" },
+      },
+    },
   },
 ];
 
-// ─── Tool Handlers ──────────────────────────────────────────
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: ALL_TOOLS,
-}));
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: ALL_TOOLS }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
-  // Helper: args lookup with default
   const n = (key: string, def?: number): number | undefined => {
     const v = args?.[key];
     return v !== undefined ? Number(v) : def;
@@ -418,7 +473,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let result: unknown;
 
     switch (name) {
-      // ── Inventory ──
       case "logiless_list_actual_inventory":
         result = await client.listActualInventory({
           limit: n("limit"), page: n("page"),
@@ -452,10 +506,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
         break;
       case "logiless_list_daily_inventory":
-        result = await client.listDailyInventorySummaries();
+        result = await client.listDailyInventorySummaries(s("date")!, {
+          warehouse: n("warehouse"),
+          article_code: s("article_code"),
+          limit: n("limit"),
+          page: n("page"),
+        });
         break;
 
-      // ── Articles ──
       case "logiless_list_articles":
         result = await client.listArticles({
           limit: n("limit"), page: n("page"),
@@ -480,7 +538,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = await client.deleteArticle(s("id")!);
         break;
 
-      // ── Sales Orders ──
       case "logiless_list_sales_orders":
         result = await client.listSalesOrders({
           limit: n("limit"), page: n("page"),
@@ -504,11 +561,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case "logiless_create_sales_order": {
         const { lines, store, ...rest } = args as Record<string, unknown>;
-        result = await client.createSalesOrder({
-          ...rest,
-          store: Number(store),
-          lines: lines as unknown[],
-        });
+        result = await client.createSalesOrder({ ...rest, store: Number(store), lines: lines as unknown[] });
         break;
       }
       case "logiless_update_sales_order": {
@@ -523,7 +576,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = await client.cancelSalesOrderLine(s("order_id")!, s("line_id")!);
         break;
 
-      // ── Outbound ──
       case "logiless_list_outbound_deliveries":
         result = await client.listOutboundDeliveries({
           limit: n("limit"), page: n("page"),
@@ -535,16 +587,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
         break;
 
-      // ── Master Data ──
       case "logiless_list_warehouses": result = await client.listWarehouses(); break;
       case "logiless_list_stores": result = await client.listStores(); break;
-      case "logiless_list_locations": result = await client.listLocations(); break;
-      case "logiless_list_suppliers": result = await client.listSuppliers(); break;
-      case "logiless_list_article_maps": result = await client.listArticleMaps(); break;
-      case "logiless_list_reorder_points": result = await client.listReorderPoints(); break;
-      case "logiless_list_transaction_logs": result = await client.listTransactionLogs(); break;
-      case "logiless_list_inter_warehouse_transfers": result = await client.listInterWarehouseTransfers(); break;
-      case "logiless_list_inbound_deliveries": result = await client.listInboundDeliveries(); break;
+      case "logiless_list_locations": result = await client.listLocations(Number(s("warehouse_id"))); break;
+      case "logiless_list_suppliers": result = await client.listSuppliers({ limit: n("limit"), page: n("page"), code: s("code"), updated_at_from: s("updated_at_from"), updated_at_to: s("updated_at_to") }); break;
+      case "logiless_list_article_maps": result = await client.listArticleMaps({ limit: n("limit"), page: n("page"), store: n("store"), article_code: s("article_code") }); break;
+      case "logiless_list_reorder_points": result = await client.listReorderPoints({ limit: n("limit"), page: n("page"), article_code: s("article_code"), warehouse_id: n("warehouse_id"), is_reorder_level: n("is_reorder_level") }); break;
+      case "logiless_list_transaction_logs": result = await client.listTransactionLogs({ limit: n("limit"), page: n("page"), transaction_type: s("transaction_type"), article_code: s("article_code"), warehouse_id: n("warehouse_id"), created_at_from: s("created_at_from"), created_at_to: s("created_at_to") }); break;
+      case "logiless_list_inter_warehouse_transfers": result = await client.listInterWarehouseTransfers({ limit: n("limit"), page: n("page"), document_status: s("document_status"), warehouse: n("warehouse"), destination: n("destination") }); break;
+      case "logiless_list_inbound_deliveries": result = await client.listInboundDeliveries({ limit: n("limit"), page: n("page"), status: s("status"), warehouse: n("warehouse") }); break;
 
       default:
         return {
@@ -565,13 +616,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// ─── Start ──────────────────────────────────────────────────
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Logiless MCP server running on stdio");
 }
-
 main().catch((err) => {
   console.error("Fatal error:", err);
   process.exit(1);
