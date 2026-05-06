@@ -50,7 +50,7 @@ export class LogilessClient {
           try {
             const parsed = data ? JSON.parse(data) : {};
             if (res.statusCode && res.statusCode >= 400) {
-              const errMsg = parsed.error_description || parsed.message || `HTTP ${res.statusCode}`;
+              const errMsg = parsed.error_description || parsed.message || parsed.error?.message || `HTTP ${res.statusCode}`;
               reject(new Error(errMsg));
               return;
             }
@@ -114,12 +114,14 @@ export class LogilessClient {
   // ---- Master Data ----
   async listWarehouses() { return this.request<{ data: unknown[] }>("GET", "/warehouses"); }
   async listStores() { return this.request<{ data: unknown[] }>("GET", "/stores"); }
-  async listLocations() { return this.request<{ data: unknown[] }>("GET", "/locations"); }
-  async listSuppliers() { return this.request<{ data: unknown[] }>("GET", "/suppliers"); }
-  async listArticleMaps() { return this.request<{ data: unknown[] }>("GET", "/article_maps"); }
-  async listReorderPoints() { return this.request<{ data: unknown[] }>("GET", "/reorder_points"); }
-  async listDailyInventorySummaries() { return this.request<{ data: unknown[] }>("GET", "/daily_inventory_summaries"); }
-  async listTransactionLogs() { return this.request<{ data: unknown[] }>("GET", "/transaction_logs"); }
-  async listInterWarehouseTransfers() { return this.request<{ data: unknown[] }>("GET", "/inter_warehouse_transfers"); }
-  async listInboundDeliveries() { return this.request<{ data: unknown[] }>("GET", "/inbound_deliveries"); }
+  async listLocations(warehouseId: number) { return this.request<{ data: unknown[] }>("GET", `/warehouses/${warehouseId}/locations`); }
+  async listSuppliers(params?: Record<string, string | number | undefined>) { return this.request<{ data: unknown[] }>("GET", "/suppliers", undefined, params); }
+  async listArticleMaps(params?: Record<string, string | number | undefined>) { return this.request<{ data: unknown[] }>("GET", "/article_maps", undefined, params); }
+  async listReorderPoints(params?: Record<string, string | number | undefined>) { return this.request<{ data: unknown[] }>("GET", "/reorder_points", undefined, params); }
+  async listDailyInventorySummaries(date: string, params?: Record<string, string | number | undefined>) {
+    return this.request<{ data: unknown[] }>("GET", "/daily_inventory_summaries", undefined, { date, ...params });
+  }
+  async listTransactionLogs(params?: Record<string, string | number | undefined>) { return this.request<{ data: unknown[] }>("GET", "/transaction_logs", undefined, params); }
+  async listInterWarehouseTransfers(params?: Record<string, string | number | undefined>) { return this.request<{ data: unknown[] }>("GET", "/inter_warehouse_transfers", undefined, params); }
+  async listInboundDeliveries(params?: Record<string, string | number | undefined>) { return this.request<{ data: unknown[] }>("GET", "/inbound_deliveries", undefined, params); }
 }
