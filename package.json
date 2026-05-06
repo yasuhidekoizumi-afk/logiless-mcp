@@ -1,0 +1,39 @@
+{
+  "name": "logiless-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for LOGILESS (ロジレス) — OMS/WMS integration. Query inventory, sales orders, outbound deliveries, and manage articles via the Logiless API.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "logiless-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": ["mcp", "logiless", "ロジレス", "oms", "wms", "inventory", "ecommerce"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yasuhidekoizumi-afk/logiless-mcp.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
