@@ -9,15 +9,18 @@
   },
   "files": [
     "dist",
+    "http-server.mjs",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    ".env.example"
   ],
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "start:http": "node http-server.mjs"
   },
-  "keywords": ["mcp", "logiless", "ロジレス", "oms", "wms", "inventory", "ecommerce"],
+  "keywords": ["mcp", "logiless", "ロジレス", "oms", "wms", "inventory", "ecommerce", "japan"],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0"
