@@ -1,0 +1,34 @@
+export declare class LogilessClient {
+  private accessToken;
+  private merchantId;
+  constructor(accessToken: string, merchantId: string);
+  private request;
+  listArticles(params?: { limit?: number; page?: number; code?: string; identification_code?: string; article_type?: string; model_number?: string; updated_at_from?: string; updated_at_to?: string }): Promise<{ data: unknown[] }>;
+  getArticle(id: string): Promise<unknown>;
+  createArticle(article: Record<string, unknown>): Promise<unknown>;
+  bulkCreateArticles(articles: Record<string, unknown>[]): Promise<unknown>;
+  updateArticle(id: string, article: Record<string, unknown>): Promise<unknown>;
+  deleteArticle(id: string): Promise<unknown>;
+  listActualInventory(params?: Record<string, string | number | undefined>): Promise<{ data: unknown[] }>;
+  searchActualInventory(body: { article_codes?: string[]; identification_codes?: string[]; model_numbers?: string[]; warehouse_id?: number }): Promise<{ data: unknown[] }>;
+  listLogicalInventory(params?: Record<string, string | number | undefined>): Promise<{ data: unknown[] }>;
+  searchLogicalInventory(body: { article_codes?: string[]; identification_codes?: string[]; model_numbers?: string[]; warehouse_id?: number }): Promise<{ data: unknown[] }>;
+  listSalesOrders(params?: Record<string, string | number | undefined>): Promise<{ data: unknown[] }>;
+  searchSalesOrders(body: { ids?: number[]; codes?: string[] }): Promise<{ data: unknown[] }>;
+  getSalesOrder(id: string): Promise<unknown>;
+  createSalesOrder(salesOrder: Record<string, unknown>): Promise<unknown>;
+  updateSalesOrder(id: string, salesOrder: Record<string, unknown>): Promise<unknown>;
+  cancelSalesOrder(id: string, clearsCode?: boolean): Promise<unknown>;
+  cancelSalesOrderLine(orderId: string, lineId: string): Promise<unknown>;
+  listOutboundDeliveries(params?: Record<string, string | number | undefined>): Promise<{ data: unknown[] }>;
+  listWarehouses(): Promise<{ data: unknown[] }>;
+  listStores(): Promise<{ data: unknown[] }>;
+  listLocations(): Promise<{ data: unknown[] }>;
+  listSuppliers(): Promise<{ data: unknown[] }>;
+  listArticleMaps(): Promise<{ data: unknown[] }>;
+  listReorderPoints(): Promise<{ data: unknown[] }>;
+  listDailyInventorySummaries(): Promise<{ data: unknown[] }>;
+  listTransactionLogs(): Promise<{ data: unknown[] }>;
+  listInterWarehouseTransfers(): Promise<{ data: unknown[] }>;
+  listInboundDeliveries(): Promise<{ data: unknown[] }>;
+}
